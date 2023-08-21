@@ -1,0 +1,3 @@
+PORT=666
+GOOGLE='' #google key
+SHODAN='' #shodan key
