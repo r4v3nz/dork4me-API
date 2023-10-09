@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Página de Pesquisa</title>
+    <title>dork4me</title>
     <script
       src="https://code.jquery.com/jquery-3.7.0.min.js"
       integrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g="
@@ -12,26 +12,113 @@
       integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm"
       crossorigin="anonymous"
     ></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+      integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+      crossorigin="anonymous"
+    ></script>
   </head>
-  <body>
-    <h1>Pesquisar no Meu Site</h1>
-    <form action="#">
-      <input
-        id="domain"
-        type="text"
-        name="domain"
-        placeholder="Digite sua pesquisa"
-      />
-      <button id="search-domain" type="button">Pesquisar</button>
-    </form>
+  <body class="bg-dark">
+    <header class="text-center p-1 bg-light">
+      <a href="https://github.com/r4v3nz" target="_blank" class="text-dark">
+        <i class="fab fa-github fa-lg"></i> r4v3nz
+      </a>
+    </header>
+    <div class="container bg-light rounded-pill mt-5 py-4 px-5">
+      <h1 class="text-center text-dark">dork4me</h1>
+      <form action="#">
+        <div class="input-group mb-3">
+          <input
+            id="domain"
+            type="text"
+            name="domain"
+            class="form-control"
+            placeholder="Insira um domínio (ou subdomínio) para pesquisa"
+          />
+          <button class="btn btn-dark" id="search-domain" type="submit">
+            Buscar <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </form>
+    </div>
+    <div
+      hidden
+      id="container-results"
+      class="container justify-content-between mt-5 bg-light rounded-pill py-4 px-5"
+    >
+      <div class="row">
+        <div class="col-4">
+          <h3 class="text-center">
+            <i class="fa-brands fa-google"></i>
+          </h3>
+          <div id="g-results" class="text-center"></div>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
 
 <script>
+  const Toast = Swal.mixin({
+    toast: true,
+    position: "top-end",
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener("mouseenter", Swal.stopTimer);
+      toast.addEventListener("mouseleave", Swal.resumeTimer);
+    },
+  });
   $("#search-domain").click(function (e) {
+    $("#g-results").empty();
+    $("#container-results").attr("hidden", true);
     e.preventDefault();
     let domain = $("#domain").val();
     const url = `/search/${domain}`;
-    $.get(url, function (data) {});
+    try {
+      $.get(url, function (data) {
+        if (data.status == "success") {
+          Toast.fire({
+            icon: "success",
+            title: data.msg,
+          });
+          $("#container-results").removeAttr("hidden");
+          data.data.forEach((result) => {
+            const resultElement = $("<a>")
+              .attr("href", result.link)
+              .text(result.link);
+            $("#g-results").append(resultElement);
+            $("#g-results").append("<br>");
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Ops..",
+            text: data.msg,
+          });
+        }
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Erro desconhecido...",
+        text: "Contate um administrador!",
+      });
+    }
   });
 </script>

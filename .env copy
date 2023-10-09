@@ -1,3 +1,6 @@
-PORT=666
-GOOGLE='' #google key
-SHODAN='' #shodan key
+## AS KEYS SAO NECESSARIAS PARA O FUNCIONAMENTO
+PORT=
+google_apiKey='' #google key
+google_cx='' #google cx
+shodan_apiKey='' #shodan key
+dorks_file='./google-dorks.txt' #dorks file
