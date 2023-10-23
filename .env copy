@@ -1,6 +1,6 @@
-## AS KEYS SAO NECESSARIAS PARA O FUNCIONAMENTO
-PORT=
+PORT=80
 google_apiKey='' #google key
 google_cx='' #google cx
-shodan_apiKey='' #shodan key
+googleLeaks_cx='' #google leaks cx
 dorks_file='./google-dorks.txt' #dorks file
+leaks_file='./leaks-dorks.txt' #dorks leaks file

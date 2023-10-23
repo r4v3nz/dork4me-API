@@ -38,7 +38,7 @@
         <i class="fab fa-github fa-lg"></i> r4v3nz
       </a>
     </header>
-    <div class="container bg-light rounded-pill mt-5 py-4 px-5">
+    <div class="container bg-light rounded-3 mt-5 py-4 px-5">
       <h1 class="text-center text-dark">dork4me</h1>
       <form action="#">
         <div class="input-group mb-3">
@@ -55,17 +55,29 @@
         </div>
       </form>
     </div>
-    <div
-      hidden
-      id="container-results"
-      class="container justify-content-between mt-5 bg-light rounded-pill py-4 px-5"
-    >
-      <div class="row">
-        <div class="col-4">
-          <h3 class="text-center">
-            <i class="fa-brands fa-google"></i>
-          </h3>
-          <div id="g-results" class="text-center"></div>
+    <div id="container-results" hidden>
+      <div class="container mt-5">
+        <div class="bg-light rounded p-4">
+          <div class="row">
+            <div class="col-6">
+              <h2 class="mt-4 text-center">Resultados</h2>
+              <div id="g-results" class="mt-3"></div>
+            </div>
+            <div class="col-6">
+              <h2 class="mt-4 text-center">Possíveis Vazamentos</h2>
+              <div id="g-leaks" class="mt-3"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="container mt-5">
+        <div class="bg-light rounded p-4">
+          <div class="row">
+            <div class="col-12">
+              <h2 class="mt-4 text-center">Informações Shodan</h2>
+              <div id="shodan-results" class="mt-3"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -84,41 +96,124 @@
       toast.addEventListener("mouseleave", Swal.resumeTimer);
     },
   });
-  $("#search-domain").click(function (e) {
-    $("#g-results").empty();
-    $("#container-results").attr("hidden", true);
-    e.preventDefault();
-    let domain = $("#domain").val();
-    const url = `/search/${domain}`;
-    try {
-      $.get(url, function (data) {
-        if (data.status == "success") {
-          Toast.fire({
-            icon: "success",
-            title: data.msg,
-          });
-          $("#container-results").removeAttr("hidden");
-          data.data.forEach((result) => {
-            const resultElement = $("<a>")
-              .attr("href", result.link)
-              .text(result.link);
-            $("#g-results").append(resultElement);
-            $("#g-results").append("<br>");
-          });
-        } else {
-          Swal.fire({
-            icon: "error",
-            title: "Ops..",
-            text: data.msg,
-          });
-        }
+
+  const handleResponse = function (data) {
+    if (data.status === "success") {
+      Toast.fire({
+        icon: "success",
+        title: data.msg,
       });
-    } catch (error) {
+
+      $("#g-results").empty();
+      $("#g-leaks").empty();
+      $("#shodan-results").empty();
+      addResultsToGoogleElement($("#g-results"), data.data.google.info);
+      addResultsToGoogleElement($("#g-leaks"), data.data.google.leaks);
+      addResultsToShodanElement($("#shodan-results"), data.data.shodan);
+      $("#container-results").removeAttr("hidden");
+    } else {
       Swal.fire({
         icon: "error",
-        title: "Erro desconhecido...",
-        text: "Contate um administrador!",
+        title: "Ops..",
+        text: data.msg,
       });
     }
+  };
+
+  $("#search-domain").click(function (e) {
+    e.preventDefault();
+
+    let domain = $("#domain")
+      .val()
+      .replace(/^(https?:\/\/)/, "");
+    const url = `/search/${encodeURIComponent(domain)}`;
+
+    showLoading();
+
+    $.get(url)
+      .done(handleResponse)
+      .fail(() => {
+        Swal.fire({
+          icon: "error",
+          title: "Erro desconhecido...",
+          text: "Contate um administrador!",
+        });
+      });
   });
+
+  const addResultsToGoogleElement = function (element, data) {
+    if (Object.keys(data).length === 0) {
+      var noResultsMessage = $("<p>").text("Nenhum resultado encontrado.");
+      element.append(noResultsMessage);
+    } else {
+      for (var key in data) {
+        if (data.hasOwnProperty(key)) {
+          var ul = $("<ul>").appendTo(element);
+          var title = $("<a>")
+            .attr("href", `https://www.google.com/search?q=${key}`)
+            .append($("<h5>").text(key).addClass("text-center"));
+          var sub_title = $("<p>")
+            .text(`Numero de Resultados: ${data[key].total}`)
+            .addClass("text-center");
+          ul.append(title);
+          ul.append(sub_title);
+
+          if (Array.isArray(data[key].query)) {
+            data[key].query.forEach((result) => {
+              var li = $("<li>").text(result.link);
+              ul.append(li);
+            });
+          }
+        }
+      }
+    }
+  };
+
+  const addResultsToShodanElement = function (element, data) {
+    if (Object.keys(data).length === 0) {
+      var noResultsMessage = $("<p>").text("Nenhum resultado encontrado.");
+      element.append(noResultsMessage);
+    } else {
+      const properties = {
+        ip: "IP",
+        hostnames: "Hostnames",
+        ports: "Portas abertas",
+        cpes: "CPES",
+        vulns: "Possiveis vulnerabilidades",
+      };
+
+      Object.keys(properties).forEach((key) => {
+        const value = data[key];
+        const displayValue = value !== "[]" ? value : "Não encontrado.";
+        const propElement = $("<h6>").text(
+          `${properties[key]}: ${displayValue}`
+        );
+        element.append(propElement);
+      });
+    }
+  };
+
+  const showLoading = function () {
+    Swal.fire({
+      title: "Carregando",
+      allowEscapeKey: false,
+      allowOutsideClick: false,
+      timer: 2000,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    }).then(
+      () => {},
+      (dismiss) => {
+        if (dismiss === "timer") {
+          Swal({
+            title: "Concluído!",
+            type: "success",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        }
+      }
+    );
+  };
 </script>

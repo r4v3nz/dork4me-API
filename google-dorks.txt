@@ -1,4 +1,2 @@
 site:_DOMAIN_ -www -shop -share -ir -mfa
-site:pastebin.com "_DOMAIN_"
 inurl:config | inurl:env | inurl:setting | inurl:backup | inurl:admin | inurl:php site:_DOMAIN_
-inurl:id= | inurl:pid= | inurl:category= | inurl:cat= | inurl:action= | inurl:sid= | inurl:dir= inurl:& site:_DOMAIN_
